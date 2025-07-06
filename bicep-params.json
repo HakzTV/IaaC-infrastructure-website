@@ -1,0 +1,12 @@
+{
+  "location": { "value": "uksouth" },
+  "appName": { "value": "telvin-wordpress" },
+  "postgresqlServerName": { "value": "postgres-telvin" },
+  "adminPassword": { "value": "My@ssw0rd!" },
+  "frontdoorName": { "value": "telvin-frontdoor" },
+  "customDomain": { "value": "telvinis.online" },
+  "ddosProtectionPlanId": { "value": "/subscriptions/93977ac3-7b4b-4ee6-9bdb-caf2b18bf27d/resourceGroups/esol-website-prod/providers/Microsoft.Network/ddosProtectionPlans/wp-ddos-plan" },
+  "tenantId": { "value": "d971e580-1fbd-431e-b5c7-3225a4766016" },
+  "keyVaultName": { "value": "esolvault17516502" },
+  "backupStartTime": { "value": "2025-07-04T01:00:00Z" }
+}
