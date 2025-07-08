@@ -30,11 +30,11 @@ resource backupStorage 'Microsoft.Storage/storageAccounts@2022-09-01' = {
   name: backupStorageAccountName
   location: location
   sku: {
-    name: 'Standard_LRS'
+    name: 'Standard_GRS'
   }
   kind: 'StorageV2'
   properties: {
-    accessTier: 'Hot'
+    accessTier: 'Cool'
     allowBlobPublicAccess: false
     minimumTlsVersion: 'TLS1_2'
     supportsHttpsTrafficOnly: true

@@ -4,11 +4,10 @@ param location string = resourceGroup().location
 param appName string
 param postgresqlServerName string
 param adminPassword string
-param frontdoorName string
 param customDomain string
 param tenantId string // Azure AD Tenant ID for Auth
 // param aadClientId string // Azure AD App Registration Client ID
-param ddosProtectionPlanId string
+// param ddosProtectionPlanId string
 param backupStartTime string = '2025-07-04T01:00:00Z'
 param keyVaultName string
 
@@ -21,7 +20,6 @@ module vnet 'modules/vnet.bicep' = {
   name: 'vnet'
   params: {
     location: location
-    ddosProtectionPlanId: ddosProtectionPlanId
   }
 }
 
@@ -31,6 +29,7 @@ module postgresql 'modules/postgresql.bicep' = {
   name: 'postgresql'
   params: {
     serverName: postgresqlServerName
+
     adminPassword: adminPassword
     subnetId: vnet.outputs.postgresSubnetId
     privateDnsZoneArmResourceId: privatedns.outputs.dnsZoneId
@@ -55,6 +54,7 @@ module privatedns 'modules/privateDns.bicep' = {
   scope: resourceGroup(resourceGroup().name) // 👈 or use a parameter for flexibility
   params: {
     dnsZoneName: dnsZoneName
+    vnetId: vnet.outputs.vnetId // Pass the VNET ID to link the DNS zone
   }
 }
 
@@ -95,7 +95,7 @@ module app 'modules/appService.bicep' = {
     location: location
     appName: appName
     postgresqlFqdn: postgresql.outputs.postgresqlFqdn
-    identityPrincipalId: identity.outputs.identityId
+    identityId: identity.outputs.identityId
     vnetSubnetId: vnet.outputs.appSubnetId
     appInsightsInstrumentationKey: monitor.outputs.appInsightsInstrumentationKey
     logAnalyticsWorkspaceId: monitor.outputs.logAnalyticsWorkspaceId
@@ -106,23 +106,19 @@ module app 'modules/appService.bicep' = {
 }
 output appCheck string = app.outputs.appServiceId
 
-// Deploy Azure Front Door for global delivery and WAF
-module frontdoor 'modules/frontdoor.bicep' = {
-  name: 'frontdoor'
-  params: {
-    frontdoorName: frontdoorName
-    customDomain: customDomain
-    backendHost: app.outputs.appUrl
-    wafPolicyName: 'wp-waf-policy' // Ensure this matches your WAF policy name
-  }
-}
 // Configure DNS zone and CNAME pointing to Front Door
 module dns 'modules/dns.bicep' = {
   name: 'dns'
   params: {
     domainName: customDomain
-    frontdoorHostname: frontdoor.outputs.frontdoorHostname
+    location: 'global' // DNS zones are global
+    appServiceHostname: app.outputs.appUrl // Use the App Service URL
+    subdomain: 'www' // or any other subdomain you want to use
+    appServiceName: appName // Pass the App Service name for CNAME creation
   }
+  dependsOn: [
+    app
+  ]
 }
 
 // Configure NSG for App Service subnet
@@ -184,9 +180,18 @@ module alerts 'modules/alerts.bicep' = {
     logAnalyticsWorkspaceId: monitor.outputs.logAnalyticsWorkspaceId
   }
 }
+module cdn 'modules/cdn.bicep' = {
+  name: 'cdnDeploy'
+  params: {
+    cdnProfileName: 'telvin-cdn-profile'
+    cdnEndpointName: 'telvin-cdn-endpoint'
+    appServiceHostName: '${app.name}.azurewebsites.net'
+    location: 'global'
+  }
+}
 
 // Outputsa
-output wordpressUrl string = frontdoor.outputs.siteUrl
+
 output postgresqlFqdn string = postgresql.outputs.postgresqlFqdn
 output appServiceUrl string = app.outputs.appUrl
 output appServiceId string = app.outputs.appServiceId

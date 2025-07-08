@@ -1,3 +1,4 @@
 docs/Checklist.md
 .env
 we.json
+/modules/frontdoor.bicep

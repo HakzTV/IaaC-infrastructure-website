@@ -2,7 +2,7 @@ param location string = 'northeurope' // Default location, can be overridden
 param appName string
 param postgresqlFqdn string
 // param adminPassword string
-param identityPrincipalId string
+param identityId string
 param vnetSubnetId string // For VNET Integration
 param appInsightsInstrumentationKey string = ''
 param logAnalyticsWorkspaceId string = ''
@@ -38,7 +38,7 @@ resource app 'Microsoft.Web/sites@2022-03-01' = {
   identity: {
     type: 'UserAssigned'
     userAssignedIdentities: {
-      '${identityPrincipalId}': {}
+      '${identityId}': {}
     }
   }
   properties: {
@@ -87,12 +87,7 @@ resource app 'Microsoft.Web/sites@2022-03-01' = {
         }
       }
       ipSecurityRestrictions: [
-        {
-          name: 'AllowFrontDoor'
-          action: 'Allow'
-          priority: 100
-          ipAddress: '147.243.0.0/16' // Example AFD IP range — replace with actual if needed
-        }
+
         {
           name: 'AllowManagementIP'
           action: 'Allow'
@@ -110,7 +105,58 @@ resource app 'Microsoft.Web/sites@2022-03-01' = {
     httpsOnly: true
   }
 }
-
+resource stagingSlot 'Microsoft.Web/sites/slots@2022-03-01' = {
+  name: '${app.name}/staging' // 👈 slot under same app
+  location: location
+  properties: {
+    serverFarmId: plan.id
+    siteConfig: {
+      linuxFxVersion: 'DOCKER|wordpress:latest'
+      appSettings: [
+        {
+          name: 'DB_CONNECTION_STRING'
+          value: 'Server=${postgresqlFqdn};Database=wordpress;User Id=wpadmin;Password=@Microsoft.KeyVault(SecretUri=${keyVaultUri}secrets/adminPassword)'
+        }
+        {
+          name: 'WEBSITES_ENABLE_APP_SERVICE_STORAGE'
+          value: 'true'
+        }
+        {
+          name: 'WEBSITE_LOCAL_CACHE_OPTION'
+          value: 'Always'
+        }
+        {
+          name: 'APPINSIGHTS_INSTRUMENTATIONKEY'
+          value: appInsightsInstrumentationKey
+        }
+        {
+          name: 'LOG_ANALYTICS_WORKSPACE_ID'
+          value: logAnalyticsWorkspaceId
+        }
+      ]
+      virtualNetworkSubnetId: vnetSubnetId
+      azureStorageAccounts: {
+        wpcontent: {
+          type: 'AzureFiles'
+          accountName: storageAccountName
+          shareName: fileShareName
+          accessKey: storageKey
+          mountPath: '/mnt/wp-content'
+        }
+      }
+    }
+    httpsOnly: true
+  }
+  identity: {
+    type: 'UserAssigned'
+    userAssignedIdentities: {
+      '${identityId}': {}
+    }
+  }
+  dependsOn: [
+    app // ensure slot is created after app
+  ]
+}
 // Auto-scale configuration for the App Service Plan
 resource autoscale 'Microsoft.Insights/autoscalesettings@2022-10-01' = {
   name: '${appName}-autoscale'
@@ -203,3 +249,4 @@ resource diagnostics 'Microsoft.Insights/diagnosticSettings@2021-05-01-preview' 
 output appServicePlanId string = plan.id
 output appUrl string = app.properties.defaultHostName
 output appServiceId string = app.id
+output stagingSlotHostname string = 'https://${appName}.azurewebsites.net'

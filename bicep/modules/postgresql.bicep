@@ -3,10 +3,11 @@ param location string = 'uksouth'
 
 @description('Name of the PostgreSQL Flexible Server.')
 param serverName string
-@description('Resource ID of the Private DNS zone for MySQL ')
+@description('Resource ID of the Private DNS zone for PostGreSQL Flexible Server.')
 param privateDnsZoneArmResourceId string
 
 @description('The administrator password for the PostgreSQL server.')
+
 @secure()
 param adminPassword string
 
