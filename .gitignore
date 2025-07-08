@@ -1,4 +1,7 @@
 docs/Checklist.md
+docs/security-report.md
 .env
 we.json
 /modules/frontdoor.bicep
+deployment-debug.log
+bicep-parameters.json
