@@ -16,7 +16,7 @@ if [ -z "$ADMIN_PASSWORD" ]; then
 fi
 echo "✅ Loaded .env"
 
-RESOURCE_GROUP="esol-wordpress-prod"
+RESOURCE_GROUP="esol-website-prod"
 LOCATION="uksouth"
 DEPLOYMENT_NAME="esol-wordpress-deployment"
 BICEP_FILE="./bicep/main.bicep"

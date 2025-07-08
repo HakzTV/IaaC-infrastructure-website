@@ -4,4 +4,4 @@ docs/security-report.md
 we.json
 /modules/frontdoor.bicep
 deployment-debug.log
-bicep-parameters.json
+bicep-params.json
