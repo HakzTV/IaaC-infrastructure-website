@@ -11,15 +11,15 @@ param storageAccountName string
 param fileShareName string
 // @secure()
 // param storageAccountKey string
-var storageKey = listKeys(storageAccountName, '2022-09-01').keys[0].value
+var storageKey = listKeys(resourceId('Microsoft.Storage/storageAccounts', storageAccountName), '2022-09-01').keys[0].value
 
 // App Service Plan (Linux, PremiumV2)
 resource plan 'Microsoft.Web/serverfarms@2022-03-01' = {
   name: '${appName}-plan'
   location: location
   sku: {
-    name: 'P1v2'
-    tier: 'PremiumV2'
+    name: 'S1'
+    tier: 'Standard'
     capacity: 1 // Start with 1 instance
   }
   kind: 'linux'

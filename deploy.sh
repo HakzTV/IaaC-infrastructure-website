@@ -29,7 +29,7 @@ KEYVAULT_NAME="esolvault$(date +%s | cut -c1-8)"
 BACKUP_TIME="2025-07-09T01:00:00Z"
 
 SSL_DEPLOYMENT_NAME="esol-ssl-binding"
-SSL_BICEP_FILE="./bicep/sslBinding.bicep"
+SSL_BICEP_FILE="./bicep/modules/sslBinding.bicep"
 APP_SERVICE_PLAN_NAME="${APP_NAME}-plan"
 SUBDOMAIN="www"
 
